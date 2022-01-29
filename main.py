@@ -1,3 +1,17 @@
+#  _      _    _________    _           _    ________    _     _
+# | \    / |  |  _____  |  | |         | |  |  ______|  | |   | |
+# |  \  /  |  | |_____| |  | |         | |  \ \______   | |___| |
+# |   \/   |  |  _____  |  | |         | |   \_____  |  |  ___  |
+# | |\  /| |  | |     | |  | |______   | |   _____/ /   | |   | |
+# |_| \/ |_|  |_|     |_|  |________|  |_|  |______/    |_|   |_|
+
+#  _________    _           ________    ________
+# |  _____  |  | |         |  ______|  |  ______|
+# | |     | |  | |         | |______   | |  ____ 
+# | |     | |  | |         |  ______|  | | |__  |
+# | |_____| |  | |______   | |______   | |____| |
+# |_________|  |________|  |________|  |________|
+
 import random
 from vkbottle.bot import Bot, Message
 from vkbottle import Keyboard, KeyboardButtonColor, Text, OpenLink, Location, EMPTY_KEYBOARD
@@ -26,7 +40,6 @@ class EditFile(BaseStateGroup):
         VIDEO_FILE_ADD = 12
 
 msg_start = ["начать", "привет", "старт"]
-msg_vkus = ["вкусы", "вкус"]
 msg_price = ["цены", "цена", "стоимость"]
 msg_order = ["заказать", "заказ"]
 msg_gachi = ["гачи", "гачи анекдот", "анекдот"]
@@ -42,20 +55,18 @@ msg_by = ["пока", "выход"]
 @bot.on.message(payload={"dev": "menu"})
 @bot.on.message(text="Dev")
 async def menu_dev(message: Message):
-        if message.from_id == 253309814:
+        if message.from_id == 253309814 or message.from_id == 403603979:
                 keyboard = Keyboard()
 
                 keyboard.add(Text("gachi.txt", {"dev": "gachi"}))
                 keyboard.row()
                 keyboard.add(Text("price.txt", {"dev": "price"}))
                 keyboard.row()
-                keyboard.add(Text("vkus.txt", {"dev": "vkus"}))
-                keyboard.row()
                 keyboard.add(Text("video.txt", {"dev": "video"}))
                 keyboard.row()
                 keyboard.add(Text("Exit", {"cmd": "menu"}), color=KeyboardButtonColor.NEGATIVE)
 
-                await message.answer("Меню разработчика: \ngachi.txt \nprice.txt \nvkus.txt \nExit", keyboard = keyboard)
+                await message.answer("Меню разработчика: \ngachi.txt \nprice.txt \nExit", keyboard = keyboard)
         else:
                 await message.answer(f"Ты не мой папа! {message.from_id}")
 
@@ -78,18 +89,6 @@ async def price_dev(message: Message):
         keyboard.add(Text("Показать", {"dev": "view_price"}))
         keyboard.add(Text("Исправить", {"dev": "edit_price"}))
         keyboard.add(Text("Добавить", {"dev": "add_price"}))
-        keyboard.row()
-        keyboard.add(Text("Назад", {"dev": "menu"}), color=KeyboardButtonColor.NEGATIVE)
-
-        await message.answer("Выберите режим", keyboard=keyboard)
-
-@bot.on.message(payload={"dev": "vkus"})
-async def vkus_dev(message: Message):
-        keyboard = Keyboard()
-
-        keyboard.add(Text("Показать", {"dev": "view_vkus"}))
-        keyboard.add(Text("Исправить", {"dev": "edit_vkus"}))
-        keyboard.add(Text("Добавить", {"dev": "add_vkus"}))
         keyboard.row()
         keyboard.add(Text("Назад", {"dev": "menu"}), color=KeyboardButtonColor.NEGATIVE)
 
@@ -207,56 +206,6 @@ async def price_dev_add_str(message: Message):
         message.payload = {"dev": "price"}
         return "Успех"
 
-#=========================Edit for vkus.txt===============================================
-@bot.on.message(payload={"dev": "view_vkus"})
-async def vkus_dev_view(message: Message):
-        with open('vkus.txt', 'r', encoding='utf-8') as f:
-                g = f.readlines()
-                await message.answer(''.join(g))
-        message.payload = {"dev": "vkus"}
-
-@bot.on.message(payload={"dev": "edit_vkus"})
-async def vkus_dev_edit(message: Message):
-        await bot.state_dispenser.set(message.peer_id, EditFile.VKUS_FILE_EDIT_NUM)
-        return "Введите НОМЕР СТРОКИ для замены"
-
-@bot.on.message(state=EditFile.VKUS_FILE_EDIT_NUM)
-async def vkus_dev_edit_number(message: Message):
-        ctx.set("vkus_num", message.text)
-        await bot.state_dispenser.set(message.peer_id, EditFile.VKUS_FILE_EDIT_STR)
-        return "Введите новую строку"
-
-@bot.on.message(state=EditFile.VKUS_FILE_EDIT_STR)
-async def vkus_dev_edit_str(message: Message):
-        num = int(ctx.get("vkus_num"))
-        new_str = message.text
-        license_edit = []
-        with open('vkus.txt', 'r', encoding='utf-8') as f:
-                license_edit = f.readlines()
-        license_edit.remove(license_edit[num])
-        license_edit.insert(num, new_str+'\n')
-        f = open('vkus.txt', 'w')
-        f.close()
-        with open('vkus.txt', 'w', encoding='utf-8') as f:
-                f.write(''.join(license_edit))
-        await bot.state_dispenser.set(message.peer_id, EditFile.NONE_FILE)
-        message.payload = {"dev": "vkus"}
-        return "Успех"
-
-@bot.on.message(payload={"dev": "add_vkus"})
-async def vkus_dev_add(message: Message):
-        await bot.state_dispenser.set(message.peer_id, EditFile.VKUS_FILE_ADD)
-        return "Введите строку, которую надо добавить"
-
-@bot.on.message(state=EditFile.VKUS_FILE_ADD)
-async def vkus_dev_add_str(message: Message):
-        new_str = message.text
-        with open('vkus.txt', 'a', encoding='utf-8') as f:
-                f.write('\n'+new_str)
-        await bot.state_dispenser.set(message.peer_id, EditFile.NONE_FILE)
-        message.payload = {"dev": "vkus"}
-        return "Успех"
-
 #=========================Edit for video.txt===============================================
 @bot.on.message(payload={"dev": "view_video"})
 async def video_dev_view(message: Message):
@@ -320,10 +269,9 @@ async def message_hi(message: Message):
         sleep(1)
         await message.answer("Меня зовут Zaёbik")
         sleep(1)
-        await message.answer("Я ещё совсем маленький, в отличии от тебя, раз ты решился тут покупать, я знаю мало комманд и совсем немного чего умею, мой папа долбаёб не научил меня ничему")
+        await message.answer("Я ещё совсем маленький, знаю мало комманд и совсем немного чего умею, мой папа долбаёб не научил меня ничему")
         sleep(1)
 
-        keyboard.add(Text("Вкусы", {"cmd": "vkus"}), color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Цены", {"cmd": "price"}), color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Заказать"), color=KeyboardButtonColor.POSITIVE)
         keyboard.row()
@@ -334,7 +282,7 @@ async def message_hi(message: Message):
         keyboard.row()
         keyboard.add(OpenLink("https://www.instagram.com/zbspuff_msk/", "Инстаграмм"), color=KeyboardButtonColor.POSITIVE)
 
-        await message.answer("Вот несколько комманд, которые я знаю: \n- Вкусы \n- Цены \n- Заказать/заказ \n- Гачи анекдот/гачи/анекдот", keyboard=keyboard)
+        await message.answer("Вот несколько комманд, которые я знаю:\n- Цены \n- Заказать/заказ \n- Гачи анекдот/гачи/анекдот", keyboard=keyboard)
 
 
 
@@ -342,7 +290,6 @@ async def message_hi(message: Message):
 async def message_menu(message: Message):
         keyboard = Keyboard()
 
-        keyboard.add(Text("Вкусы", {"cmd": "vkus"}), color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Цены", {"cmd": "price"}), color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Заказать"), color=KeyboardButtonColor.POSITIVE)
         keyboard.row()
@@ -353,16 +300,7 @@ async def message_menu(message: Message):
         keyboard.row()
         keyboard.add(OpenLink("https://www.instagram.com/zbspuff_msk/", "Инстаграмм"), color=KeyboardButtonColor.POSITIVE)
 
-        await message.answer("Доступные команды: \n- Вкусы \n- Цены \n- Заказать/заказ \n- Гачи анекдот/гачи/анекдот", keyboard=keyboard)
-
-@bot.on.message(text = msg_vkus)
-@bot.on.message(payload = {"cmd": "vkus"})
-async def message_vkus(message: Message):
-        keyboard = Keyboard(one_time = True)
-
-        keyboard.add(Text("Назад", {"cmd": "menu"}), color = KeyboardButtonColor.NEGATIVE)
-        with open('vkus.txt', 'r', encoding='utf-8') as f:
-                await message.answer("Доступные вкусы:\n"+''.join(f.readlines()), keyboard = keyboard)
+        await message.answer("Доступные команды: \n- Цены \n- Заказать/заказ \n- Гачи анекдот/гачи/анекдот", keyboard=keyboard)
 
 @bot.on.message(text = msg_price)
 @bot.on.message(payload = {"cmd": "price"})
